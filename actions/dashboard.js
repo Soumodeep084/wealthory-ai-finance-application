@@ -102,8 +102,6 @@ export const createAccount = async (data) => {
     }
 }
 
-
-
 export async function getUserAccounts() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");

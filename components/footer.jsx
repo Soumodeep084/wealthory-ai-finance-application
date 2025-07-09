@@ -19,6 +19,9 @@ const Footer = () => {
           <p className="mt-2">
             ❓ Having issues? Visit our Help Center or contact support.
           </p>
+          <p className="mt-2 font-bold">
+            Our Help Center name at all locations is : <span className="text-blue-800">Wealthory-Finance</span>
+          </p>
 
           {/* 👇 Add HelpCenter component here */}
           <div className="mt-4 flex justify-center">
