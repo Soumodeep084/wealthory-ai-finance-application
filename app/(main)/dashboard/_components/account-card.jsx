@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, CreditCard } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useEffect } from "react";
 import useFetch from "@/hooks/use-fetch";
@@ -26,12 +26,11 @@ export function AccountCard({ account }) {
     } = useFetch(updateDefaultAccount);
 
     const handleDefaultChange = async (event) => {
-        event.preventDefault();
-        event.stopPropagation(); // 🔑 Prevent <Link> navigation
+        event.preventDefault(); // Prevent navigation
 
         if (isDefault) {
-            toast.warning("You need at least 1 default account");
-            return;
+            toast.warning("You need atleast 1 default account");
+            return; // Don't allow toggling off the default account
         }
 
         await updateDefaultFn(id);
@@ -50,22 +49,19 @@ export function AccountCard({ account }) {
     }, [error]);
 
     return (
-        <Card className="hover:shadow-md transition-shadow group relative cursor-pointer">
-            {/* Only wrap the clickable title/content inside Link */}
-            <Link href={`/account/${id}`} className="block">
+        <Card className="hover:shadow-md transition-shadow group relative">
+            <Link href={`/account/${id}`}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium capitalize">
                         {name}
                     </CardTitle>
-                    {/* 🔧 Place Switch outside of Link interaction */}
                     <Switch
                         checked={isDefault}
                         onClick={handleDefaultChange}
                         disabled={updateDefaultLoading}
-                        className="cursor-pointer"
                     />
                 </CardHeader>
-                <CardContent className="space-y-1.5">
+                <CardContent>
                     <div className="text-2xl font-bold">
                         ${parseFloat(balance).toFixed(2)}
                     </div>
@@ -73,7 +69,7 @@ export function AccountCard({ account }) {
                         {type.charAt(0) + type.slice(1).toLowerCase()} Account
                     </p>
                 </CardContent>
-                <CardFooter className="mt-2 flex justify-between text-sm text-muted-foreground">
+                <CardFooter className="flex justify-between text-sm text-muted-foreground">
                     <div className="flex items-center">
                         <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
                         Income
