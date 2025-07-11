@@ -33,8 +33,11 @@ async function DashboardPage() {
             />
 
 
-            {/* Overivew */}
-
+            {/* Dashboard Overview */}
+            <DashboardOverview
+                accounts={accounts}
+                transactions={transactions || []}
+            />
 
             {/* Accounts Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
