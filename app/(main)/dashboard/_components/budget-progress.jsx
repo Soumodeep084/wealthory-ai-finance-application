@@ -64,7 +64,7 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
     }, [error]);
 
     return (
-        <Card>
+        <Card className="mb-4">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex-1">
                     <CardTitle className="text-sm font-medium">

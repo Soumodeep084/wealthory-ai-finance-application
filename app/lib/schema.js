@@ -7,21 +7,51 @@ export const accountSchema = z.object({
   isDefault: z.boolean().default(false),
 });
 
+const amountSchema = z.preprocess(
+  (val) => {
+    if (val === "" || val === undefined || val === null) return undefined;
+    const num = Number(val);
+    return isNaN(num) ? val : num;
+  },
+  z.number({ required_error: "Amount is required" }).positive("Amount must be positive")
+);
 
+const dateSchema = z.preprocess(
+  (val) => {
+    if (typeof val === "string") return new Date(val);
+    return val;
+  },
+  z.date({ required_error: "Date is required" })
+);
 
-export const transactionSchema = z
-  .object({
-    type: z.enum(["INCOME", "EXPENSE"]),
-    amount: z.string().min(1, "Amount is required"),
-    description: z.string().optional(),
-    date: z.date({ required_error: "Date is required" }),
-    accountId: z.string().min(1, "Account is required"),
-    category: z.string().min(1, "Category is required"),
-    isRecurring: z.boolean().default(false),
-    recurringInterval: z
-      .enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
-      .optional(),
+const transactionBaseSchema = z.object({
+  type: z.enum(["INCOME", "EXPENSE"]),
+  amount: amountSchema,
+  description: z.string().optional().nullable(),
+  accountId: z.string().min(1, "Account is required"),
+  category: z.string().min(1, "Category is required"),
+  isRecurring: z.boolean().default(false),
+  recurringInterval: z
+    .enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
+    .optional()
+    .or(z.literal("")),
+});
+
+export const transactionSchema = transactionBaseSchema
+  .extend({
+    date: dateSchema,
   })
+  .superRefine((data, ctx) => {
+    if (data.isRecurring && !data.recurringInterval) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Recurring interval is required",
+        path: ["recurringInterval"],
+      });
+    }
+  });
+
+const bulkTransactionItemSchema = transactionBaseSchema
   .superRefine((data, ctx) => {
     if (data.isRecurring && !data.recurringInterval) {
       ctx.addIssue({
@@ -31,3 +61,10 @@ export const transactionSchema = z
       });
     }
   });
+
+export const bulkTransactionSchema = z.object({
+  date: dateSchema,
+  transactions: z
+    .array(bulkTransactionItemSchema)
+    .min(1, "At least one transaction is required"),
+});
