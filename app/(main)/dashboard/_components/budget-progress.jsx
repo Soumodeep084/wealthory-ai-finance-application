@@ -77,7 +77,7 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
                                     type="number"
                                     value={newBudget}
                                     onChange={(e) => setNewBudget(e.target.value)}
-                                    className="w-32"
+                                    className="w-48"
                                     placeholder="Enter amount"
                                     autoFocus
                                     disabled={isLoading}
@@ -103,9 +103,9 @@ export function BudgetProgress({ initialBudget, currentExpenses }) {
                             <>
                                 <CardDescription>
                                     {initialBudget
-                                        ? `$${currentExpenses.toFixed(
+                                        ? `₹${currentExpenses.toFixed(
                                             2
-                                        )} of $${initialBudget.amount.toFixed(2)} spent`
+                                        )} of ₹${initialBudget.amount.toFixed(2)} spent`
                                         : "No budget set"}
                                 </CardDescription>
                                 <Button
