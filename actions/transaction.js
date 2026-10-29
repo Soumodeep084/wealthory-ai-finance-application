@@ -201,13 +201,16 @@ export async function createBulkTransactions(data) {
             );
 
             const createdTransactions = await Promise.all(
-                validatedData.transactions.map((transaction) =>
-                    tx.transaction.create({
+                validatedData.transactions.map((transaction) => {
+                    const transactionDate =
+                        transaction.date || validatedData.date || new Date();
+
+                    return tx.transaction.create({
                         data: {
                             type: transaction.type,
                             amount: Number(transaction.amount),
                             description: transaction.description || null,
-                            date: validatedData.date,
+                            date: transactionDate,
                             category: transaction.category,
                             accountId: transaction.accountId,
                             userId: user.id,
@@ -220,13 +223,13 @@ export async function createBulkTransactions(data) {
                                 transaction.isRecurring &&
                                     transaction.recurringInterval
                                     ? calculateNextRecurringDate(
-                                        validatedData.date,
+                                        transactionDate,
                                         transaction.recurringInterval
                                     )
                                     : null,
                         },
-                    })
-                )
+                    });
+                })
             );
 
             return createdTransactions;

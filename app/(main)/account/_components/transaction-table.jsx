@@ -216,7 +216,7 @@ const TransactionTable = ({ transactions }) => {
                     className="pl-8"
                 />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <Select
                     value={typeFilter}
                     onValueChange={(value) => {
@@ -224,7 +224,7 @@ const TransactionTable = ({ transactions }) => {
                         setCurrentPage(1);
                     }}
                 >
-                    <SelectTrigger className="w-[130px]">
+                    <SelectTrigger className="w-[130px] flex-1 sm:flex-initial">
                         <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
@@ -240,7 +240,7 @@ const TransactionTable = ({ transactions }) => {
                         setCurrentPage(1);
                     }}
                 >
-                    <SelectTrigger className="w-[130px]">
+                    <SelectTrigger className="w-[130px] flex-1 sm:flex-initial">
                         <SelectValue placeholder="All Transactions" />
                     </SelectTrigger>
                     <SelectContent>
@@ -379,7 +379,7 @@ const TransactionTable = ({ transactions }) => {
                                             : "text-green-500"
                                     )}
                                 >
-                                    {transaction.type === "EXPENSE" ? "-" : "+"}$
+                                    {transaction.type === "EXPENSE" ? "-" : "+"}₹
                                     {transaction.amount.toFixed(2)}
                                 </TableCell>
                                 <TableCell>

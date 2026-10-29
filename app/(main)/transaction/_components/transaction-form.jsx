@@ -81,14 +81,14 @@ export function AddTransactionForm({
                         initialData.recurringInterval || "",
                 }
                 : {
-                    date: new Date(),
                     transactions: [
                         {
                             type: "EXPENSE",
                             amount: "",
                             description: "",
+                            date: new Date(),
                             accountId:
-                                accounts.find(
+                                accounts?.find(
                                     (account) => account.isDefault
                                 )?.id || "",
                             category: "",
@@ -112,16 +112,19 @@ export function AddTransactionForm({
         editMode ? updateTransaction : createBulkTransactions
     );
 
-    const date = watch("date");
     const transactions = watch("transactions");
 
-    const addTransaction = () => {
+    const addTransaction = (type = "EXPENSE") => {
+        const lastDate = transactions?.[transactions.length - 1]?.date;
         append({
-            type: "EXPENSE",
+            type,
             amount: "",
             description: "",
+            date: lastDate
+                ? (lastDate instanceof Date ? lastDate : new Date(lastDate))
+                : new Date(),
             accountId:
-                accounts.find((account) => account.isDefault)?.id || "",
+                accounts?.find((account) => account.isDefault)?.id || "",
             category: "",
             isRecurring: false,
             recurringInterval: "",
@@ -135,43 +138,90 @@ export function AddTransactionForm({
             transactionFn(editId, {
                 ...data,
                 amount: parseFloat(data.amount),
+                date: data.date,
             });
             return;
         }
 
         transactionFn({
-            date: data.date,
+            date: data.transactions?.[0]?.date || new Date(),
             transactions: data.transactions.map((transaction) => ({
                 ...transaction,
                 amount: parseFloat(transaction.amount),
+                date: transaction.date || new Date(),
             })),
         });
     };
 
     const onInvalid = (errors) => {
-        toast.error(`Fields Missing : ${errors}`)
+        console.error("Validation errors:", errors);
         toast.error("Please fill in all required fields");
     };
 
     const handleScanComplete = (scannedData) => {
         if (!scannedData) return;
 
-        setValue(
-            "transactions.0.amount",
-            scannedData.amount?.toString() || ""
-        );
+        if (editMode) {
+            if (scannedData.amount) {
+                setValue("amount", scannedData.amount.toString(), {
+                    shouldValidate: true,
+                });
+            }
+            if (scannedData.date) {
+                setValue("date", new Date(scannedData.date), {
+                    shouldValidate: true,
+                });
+            }
+            if (scannedData.description) {
+                setValue("description", scannedData.description, {
+                    shouldValidate: true,
+                });
+            }
+            if (scannedData.category) {
+                setValue("category", scannedData.category, {
+                    shouldValidate: true,
+                });
+            }
+            toast.success("Receipt scanned successfully");
+            return;
+        }
+
+        const targetIndex =
+            openExpense !== null &&
+            openExpense >= 0 &&
+            openExpense < fields.length
+                ? openExpense
+                : 0;
+
+        if (scannedData.amount) {
+            setValue(
+                `transactions.${targetIndex}.amount`,
+                scannedData.amount.toString(),
+                { shouldValidate: true }
+            );
+        }
+
+        if (scannedData.date) {
+            setValue(
+                `transactions.${targetIndex}.date`,
+                new Date(scannedData.date),
+                { shouldValidate: true }
+            );
+        }
 
         if (scannedData.description) {
             setValue(
-                "transactions.0.description",
-                scannedData.description
+                `transactions.${targetIndex}.description`,
+                scannedData.description,
+                { shouldValidate: true }
             );
         }
 
         if (scannedData.category) {
             setValue(
-                "transactions.0.category",
-                scannedData.category
+                `transactions.${targetIndex}.category`,
+                scannedData.category,
+                { shouldValidate: true }
             );
         }
 
@@ -220,62 +270,9 @@ export function AddTransactionForm({
     if (editMode) {
         return (
             <form
-                onSubmit={handleSubmit(onSubmit)}
+                onSubmit={handleSubmit(onSubmit, onInvalid)}
                 className="space-y-6"
             >
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                        Date
-                    </label>
-
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !date && "text-muted-foreground"
-                                )}
-                            >
-                                {date ? (
-                                    format(date, "PPP")
-                                ) : (
-                                    <span>Pick a date</span>
-                                )}
-
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-
-                        <PopoverContent
-                            className="w-auto p-0"
-                            align="start"
-                        >
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={(value) =>
-                                    setValue("date", value, {
-                                        shouldValidate: true,
-                                    })
-                                }
-                                disabled={(value) =>
-                                    value > new Date() ||
-                                    value < new Date("1900-01-01")
-                                }
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-
-                    {errors.date && (
-                        <p className="text-sm text-red-500">
-                            {errors.date.message}
-                        </p>
-                    )}
-                </div>
-
                 <TransactionFields
                     prefix=""
                     register={register}
@@ -324,59 +321,6 @@ export function AddTransactionForm({
                 onScanComplete={handleScanComplete}
             />
 
-            <div className="space-y-2">
-                <label className="text-sm font-medium">
-                    Date
-                </label>
-
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !date && "text-muted-foreground"
-                            )}
-                        >
-                            {date ? (
-                                format(date, "PPP")
-                            ) : (
-                                <span>Pick a date</span>
-                            )}
-
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                    </PopoverTrigger>
-
-                    <PopoverContent
-                        className="w-auto p-0"
-                        align="start"
-                    >
-                        <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={(value) =>
-                                setValue("date", value, {
-                                    shouldValidate: true,
-                                })
-                            }
-                            disabled={(value) =>
-                                value > new Date() ||
-                                value < new Date("1900-01-01")
-                            }
-                            initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-
-                {errors.date && (
-                    <p className="text-sm text-red-500">
-                        {errors.date.message}
-                    </p>
-                )}
-            </div>
-
             <div className="space-y-3">
                 {fields.map((field, index) => {
                     const transaction = transactions?.[index] || {};
@@ -385,6 +329,7 @@ export function AddTransactionForm({
                         transaction.type === "INCOME"
                             ? "Income"
                             : "Expense";
+                    const isIncome = transaction.type === "INCOME";
 
                     const typeNumber =
                         transactions
@@ -400,6 +345,22 @@ export function AddTransactionForm({
                         transaction.description?.trim();
 
                     const isOpen = openExpense === index;
+
+                    const transactionDate = transaction.date
+                        ? (() => {
+                            try {
+                                const d =
+                                    transaction.date instanceof Date
+                                        ? transaction.date
+                                        : new Date(transaction.date);
+                                return !isNaN(d.getTime())
+                                    ? format(d, "PP")
+                                    : null;
+                            } catch {
+                                return null;
+                            }
+                        })()
+                        : null;
 
                     return (
                         <div
@@ -431,10 +392,24 @@ export function AddTransactionForm({
                                 className="flex cursor-pointer items-center gap-3 p-4 hover:bg-muted/50"
                             >
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span
+                                            className={cn(
+                                                "text-xs font-semibold px-2.5 py-0.5 rounded-full",
+                                                isIncome
+                                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                                    : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                                            )}
+                                        >
                                             {type} #{typeNumber}
-                                        </h3>
+                                        </span>
+
+                                        {transactionDate && (
+                                            <span className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
+                                                <CalendarIcon className="h-3 w-3" />
+                                                {transactionDate}
+                                            </span>
+                                        )}
 
                                         {transaction.isRecurring && (
                                             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
@@ -443,10 +418,10 @@ export function AddTransactionForm({
                                         )}
                                     </div>
 
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="truncate text-sm text-muted-foreground mt-1">
                                         {type} - {amount}
                                         {description
-                                            ? ` , ${description}`
+                                            ? ` • ${description}`
                                             : ""}
                                     </p>
                                 </div>
@@ -462,7 +437,7 @@ export function AddTransactionForm({
                                             type="button"
                                             variant="ghost"
                                             size="icon"
-                                            className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                            className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
                                             onClick={() =>
                                                 handleRemove(index)
                                             }
@@ -510,15 +485,26 @@ export function AddTransactionForm({
                 })}
             </div>
 
-            <Button
-                type="button"
-                variant="outline"
-                className="w-full border-dashed"
-                onClick={addTransaction}
-            >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Another Transaction
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 border-dashed hover:border-red-400 hover:text-red-600 hover:bg-red-50/40 dark:hover:bg-red-950/20"
+                    onClick={() => addTransaction("EXPENSE")}
+                >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Expense
+                </Button>
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 border-dashed hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
+                    onClick={() => addTransaction("INCOME")}
+                >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Income
+                </Button>
+            </div>
 
             <div className="flex gap-2">
                 <Button
@@ -562,10 +548,12 @@ function TransactionFields({
     accounts,
     categories,
 }) {
+    const [calendarOpen, setCalendarOpen] = useState(false);
     const field = (name) =>
         prefix ? `${prefix}.${name}` : name;
 
     const type = watch(field("type")) || "EXPENSE";
+    const date = watch(field("date"));
     const isRecurring =
         watch(field("isRecurring")) || false;
     const accountId =
@@ -575,50 +563,115 @@ function TransactionFields({
     const recurringInterval =
         watch(field("recurringInterval")) || "";
 
+    const dateValue = date
+        ? date instanceof Date
+            ? date
+            : new Date(date)
+        : undefined;
+    const isValidDate = dateValue && !isNaN(dateValue.getTime());
+
     const filteredCategories = categories.filter(
         (category) => category.type === type
     );
 
     return (
         <div className="space-y-5">
-            <div className="space-y-2">
-                <label className="text-sm font-medium">
-                    Type
-                </label>
+            <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                        Type
+                    </label>
 
-                <Select
-                    value={type}
-                    onValueChange={(value) => {
-                        setValue(field("type"), value, {
-                            shouldValidate: true,
-                        });
-                        setValue(field("category"), "", {
-                            shouldValidate: true,
-                        });
-                    }}
-                >
-                    <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
+                    <Select
+                        value={type}
+                        onValueChange={(value) => {
+                            setValue(field("type"), value, {
+                                shouldValidate: true,
+                            });
+                            setValue(field("category"), "", {
+                                shouldValidate: true,
+                            });
+                        }}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
 
-                    <SelectContent>
-                        <SelectItem value="EXPENSE">
-                            Expense
-                        </SelectItem>
-                        <SelectItem value="INCOME">
-                            Income
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
+                        <SelectContent>
+                            <SelectItem value="EXPENSE">
+                                Expense
+                            </SelectItem>
+                            <SelectItem value="INCOME">
+                                Income
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
 
-                {errors?.type && (
-                    <p className="text-sm text-red-500">
-                        {errors.type.message}
-                    </p>
-                )}
+                    {errors?.type && (
+                        <p className="text-sm text-red-500">
+                            {errors.type.message}
+                        </p>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                        Date
+                    </label>
+
+                    <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !isValidDate && "text-muted-foreground"
+                                )}
+                            >
+                                {isValidDate ? (
+                                    format(dateValue, "PPP")
+                                ) : (
+                                    <span>Pick a date</span>
+                                )}
+
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent
+                            className="w-auto p-0"
+                            align="start"
+                        >
+                            <Calendar
+                                mode="single"
+                                selected={isValidDate ? dateValue : undefined}
+                                onSelect={(value) => {
+                                    if (value) {
+                                        setValue(field("date"), value, {
+                                            shouldValidate: true,
+                                        });
+                                        setCalendarOpen(false);
+                                    }
+                                }}
+                                disabled={(value) =>
+                                    value > new Date() ||
+                                    value < new Date("1900-01-01")
+                                }
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+
+                    {errors?.date && (
+                        <p className="text-sm text-red-500">
+                            {errors.date.message}
+                        </p>
+                    )}
+                </div>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">
                         Amount
@@ -665,7 +718,7 @@ function TransactionFields({
                                     key={account.id}
                                     value={account.id}
                                 >
-                                    {account.name} ($
+                                    {account.name} (₹
                                     {parseFloat(
                                         account.balance
                                     ).toFixed(2)}

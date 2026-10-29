@@ -49,7 +49,7 @@ export async function updateDefaultAccount(accountId) {
         });
 
         revalidatePath("/dashboard");
-        return { success: true, data: serializeTransaction(account) };
+        return { success: true, data: serializeDecimal(account) };
     } catch (error) {
         return { success: false, error: error.message };
     }
@@ -86,6 +86,67 @@ export async function getAccountWithTransactions(accountId) {
         ...serializeDecimal(account),
         transactions: account.transactions.map(serializeDecimal),
     };
+}
+
+export async function deleteAccount(accountId) {
+    try {
+        const { userId } = await auth();
+        if (!userId) throw new Error("Unauthorized");
+
+        const user = await db.user.findUnique({
+            where: { clerkUserId: userId },
+        });
+
+        if (!user) throw new Error("User not found");
+
+        const account = await db.account.findUnique({
+            where: {
+                id: accountId,
+                userId: user.id,
+            },
+        });
+
+        if (!account) throw new Error("Account not found");
+
+        await db.$transaction(async (tx) => {
+            // Delete all transactions belonging to this account
+            await tx.transaction.deleteMany({
+                where: {
+                    accountId: accountId,
+                    userId: user.id,
+                },
+            });
+
+            // Delete the account
+            await tx.account.delete({
+                where: {
+                    id: accountId,
+                    userId: user.id,
+                },
+            });
+
+            // If the deleted account was default, set another remaining account as default if available
+            if (account.isDefault) {
+                const remainingAccount = await tx.account.findFirst({
+                    where: { userId: user.id },
+                    orderBy: { createdAt: "desc" },
+                });
+
+                if (remainingAccount) {
+                    await tx.account.update({
+                        where: { id: remainingAccount.id },
+                        data: { isDefault: true },
+                    });
+                }
+            }
+        });
+
+        revalidatePath("/dashboard");
+        revalidatePath("/account/[id]");
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
 }
 
 export async function bulkDeleteTransactions(transactionIds) {

@@ -11,14 +11,14 @@ const Header = async () => {
 
   return (
     <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b">
-      <nav className="container mx-auto px-4 py-2 flex items-center justify-between">
+      <nav className="container mx-auto px-3 sm:px-4 py-2 flex items-center justify-between">
         <Link href="/">
           <Image
             src={"/logo.png"}
             alt="Wealthory Logo"
             width={250}
             height={100}
-            className="h-16 w-auto object-contain"
+            className="h-11 sm:h-16 w-auto object-contain"
           />
         </Link>
 
@@ -35,7 +35,7 @@ const Header = async () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <SignedIn>
             <Link
               href="/dashboard"

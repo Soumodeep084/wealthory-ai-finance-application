@@ -17,7 +17,7 @@ import {
     Cell,
 } from "recharts";
 import { format, subDays, startOfMonth, endOfMonth, isAfter, isBefore } from "date-fns";
-import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, DollarSign, Wallet, Calendar, Percent } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, IndianRupee, Wallet, Calendar, Percent } from "lucide-react";
 
 import {
     Select,
@@ -381,7 +381,7 @@ export function DashboardOverview({ accounts, transactions }) {
                     <Card className="overflow-hidden border-l-4 border-l-emerald-500 shadow-sm hover:shadow transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
-                            <DollarSign className="h-4 w-4 text-emerald-500" />
+                            <IndianRupee className="h-4 w-4 text-emerald-500" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">

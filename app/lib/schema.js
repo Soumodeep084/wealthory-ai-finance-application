@@ -51,7 +51,10 @@ export const transactionSchema = transactionBaseSchema
     }
   });
 
-const bulkTransactionItemSchema = transactionBaseSchema
+export const bulkTransactionItemSchema = transactionBaseSchema
+  .extend({
+    date: dateSchema,
+  })
   .superRefine((data, ctx) => {
     if (data.isRecurring && !data.recurringInterval) {
       ctx.addIssue({
@@ -63,7 +66,7 @@ const bulkTransactionItemSchema = transactionBaseSchema
   });
 
 export const bulkTransactionSchema = z.object({
-  date: dateSchema,
+  date: dateSchema.optional(),
   transactions: z
     .array(bulkTransactionItemSchema)
     .min(1, "At least one transaction is required"),
