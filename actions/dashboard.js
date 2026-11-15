@@ -1,6 +1,7 @@
 "use server";
 
 import aj from "@/lib/arcjet";
+import { checkUser } from "@/lib/checkUser";
 import { db } from "@/lib/prisma";
 import { request } from "@arcjet/next";
 import { auth } from "@clerk/nextjs/server";
@@ -106,9 +107,13 @@ export async function getUserAccounts() {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
         where: { clerkUserId: userId },
     });
+
+    if (!user) {
+        user = await checkUser();
+    }
 
     if (!user) {
         throw new Error("User not found");
@@ -141,9 +146,13 @@ export async function getDashboardData() {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const user = await db.user.findUnique({
+  let user = await db.user.findUnique({
     where: { clerkUserId: userId },
   });
+
+  if (!user) {
+    user = await checkUser();
+  }
 
   if (!user) {
     throw new Error("User not found");

@@ -21,6 +21,12 @@ const isProtected = createRouteMatcher([
   "/transaction(.*)",
 ]);
 
+const isAuthOrWebhookRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/inngest(.*)",
+]);
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
 
@@ -32,10 +38,12 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
-  // Run Arcjet protection
-  const decision = await aj.protect(req);
-  if (decision.isDenied()) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Skip Arcjet on Clerk auth callbacks and Inngest webhooks so OAuth redirects aren't delayed or blocked
+  if (!isAuthOrWebhookRoute(req)) {
+    const decision = await aj.protect(req);
+    if (decision.isDenied()) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   return NextResponse.next();

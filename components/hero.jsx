@@ -36,7 +36,7 @@ const HeroSection = () => {
           Smarter money management with AI <br /> track, analyze, and optimize your finances in real time.
         </p>
         <div className="flex justify-center space-x-4">
-          <Link href="/dashboard">
+          <Link href="/dashboard" prefetch={false}>
             <Button size="lg" className="px-8 cursor-pointer">
               Get Started
             </Button>

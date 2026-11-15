@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "./ui/button";
 import { PenBox, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { checkUser } from "@/lib/checkUser";
 import Image from "next/image";
 
@@ -54,9 +54,11 @@ const Header = async () => {
             </a>
           </SignedIn>
           <SignedOut>
-            <SignInButton forceRedirectUrl="/dashboard">
-              <Button className="border border-gray-400 bg-white text-black hover:bg-black hover:text-white cursor-pointer">Login</Button>
-            </SignInButton>
+            <Link href="/sign-in">
+              <Button className="border border-gray-400 bg-white text-black hover:bg-black hover:text-white cursor-pointer">
+                Login
+              </Button>
+            </Link>
           </SignedOut>
           <SignedIn>
             <UserButton
